@@ -41,27 +41,30 @@ main{flex:1;position:relative;min-height:0}
 .who{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--dim);height:16px}
 .who b{color:var(--fg);font-weight:500;letter-spacing:.04em;margin-left:6px}
 .hand{display:flex;justify-content:center;min-height:calc(var(--cw)*1.4)}
-#bj{--cw:84px}
-#bj .hand .card+.card{margin-left:calc(var(--cw)*-.5)}
+#bjD{--cw:76px}#bjP{--cw:104px}
+#bj .hand .card+.card{margin-left:calc(var(--cw)*-.55)}
+#bj .hand.many .card+.card{margin-left:calc(var(--cw)*-.7)}
 #bj .card:not(:last-child)>svg{visibility:hidden}
-#pk .hand{gap:7px}
+#pk{container-type:inline-size}
+#pk .hand{gap:8px}
+#pkC{--cw:50px}#pkP{--cw:104px;gap:12px}
+#pkB{--cw:min(64px,calc((100cqw - 32px)/5));margin-bottom:16px}
+.slot{width:var(--cw);aspect-ratio:5/7;border:1px dashed var(--line);border-radius:9px;flex:none}
 .msg{text-align:center;font-size:22px;font-weight:300;letter-spacing:.01em;min-height:28px;transition:color .3s}
 .msg.win{color:var(--acc)}.msg.lose{color:var(--red)}
 .sub{text-align:center;font-size:12px;color:var(--dim);letter-spacing:.06em;min-height:15px;margin-top:6px}
 
 .card{width:var(--cw);aspect-ratio:5/7;border:1px solid var(--line2);border-radius:9px;background:var(--card);position:relative;
   display:grid;place-items:center;flex:none;animation:deal .32s cubic-bezier(.2,.8,.2,1) both;transition:transform .2s,opacity .2s,border-color .2s}
-.card i{position:absolute;top:5px;left:6px;font-style:normal;font-size:calc(var(--cw)*.24);font-weight:500;display:flex;flex-direction:column;align-items:center;gap:2px;line-height:1}
+.card i{position:absolute;top:calc(var(--cw)*.07);left:calc(var(--cw)*.08);font-style:normal;font-size:calc(var(--cw)*.24);font-weight:500;display:flex;flex-direction:column;align-items:center;gap:2px;line-height:1}
 .card i svg{width:calc(var(--cw)*.17);height:calc(var(--cw)*.17)}
 .card svg{width:46%;height:46%;stroke:currentColor;fill:none;stroke-width:1.3;stroke-linejoin:round}
 .card>svg{margin:18% 0 0 14%}
 .card.red{color:var(--red)}
 .card.back{background:repeating-linear-gradient(135deg,var(--card) 0 7px,#1f1f24 7px 8px);border-color:var(--line)}
 .card.back>*{display:none}
-.card.x{transform:translateY(12px);opacity:.3}
 .card.hl{border-color:var(--acc)}
 @keyframes deal{from{transform:translateY(-24px) scale(.9);opacity:0}}
-#pk .hand.mine .card{cursor:pointer}
 
 footer{flex:none;display:flex;flex-direction:column;gap:12px;padding:8px 0 14px}
 .bet{display:flex;align-items:center;justify-content:center;gap:22px}
@@ -89,7 +92,12 @@ footer{flex:none;display:flex;flex-direction:column;gap:12px;padding:8px 0 14px}
 .close{width:48px;height:48px;border-radius:50%;font-size:20px;font-weight:300}
 .done #ring .prog{stroke-width:5;transition:stroke-width .3s}
 
-@media (max-height:700px){:root{--cw:54px}#bj{--cw:72px}.msg{font-size:19px}.actions{height:48px}}
+/* long side <= 700px: iPhone SE / mini */
+@media (orientation:portrait) and (max-height:700px),(orientation:landscape) and (max-width:700px){
+  #bjD{--cw:64px}#bjP,#pkP{--cw:88px}#pkC{--cw:42px}.msg{font-size:19px}.actions{height:48px}}
+/* phone turned sideways: counter-rotate so the app stays upright on the device */
+body.rot{inset:auto;top:50%;left:50%;width:100vh;height:100vw;transform:translate(-50%,-50%) rotate(var(--r));
+  padding:max(env(safe-area-inset-left),env(safe-area-inset-right),12px) 16px 12px}
 </style>
 </head>
 <body>
@@ -115,8 +123,8 @@ footer{flex:none;display:flex;flex-direction:column;gap:12px;padding:8px 0 14px}
   </section>
   <section class="game" id="pk">
     <div class="seat"><div class="who">CPU<b id="pkCT"></b></div><div class="hand" id="pkC"></div></div>
-    <div><div class="msg" id="pkMsg"></div><div class="sub" id="pkSub"></div></div>
-    <div class="seat"><div class="hand mine" id="pkP"></div><div class="who">Tú<b id="pkPT"></b></div></div>
+    <div><div class="hand" id="pkB"></div><div class="msg" id="pkMsg"></div><div class="sub" id="pkSub"></div></div>
+    <div class="seat"><div class="hand" id="pkP"></div><div class="who">Tú<b id="pkPT"></b></div></div>
   </section>
 </main>
 
@@ -129,7 +137,7 @@ footer{flex:none;display:flex;flex-direction:column;gap:12px;padding:8px 0 14px}
   <div class="sheet">
     <svg id="ring" viewBox="0 0 200 200">
       <circle class="track" cx="100" cy="100" r="80"/>
-      <circle class="goal" cx="100" cy="100" r="90" pathLength="100" stroke-dasharray="50 100" transform="rotate(-90 100 100)"/>
+      <circle class="goal" cx="100" cy="100" r="90"/>
       <circle class="prog" id="prog" cx="100" cy="100" r="80" pathLength="100" stroke-dasharray="0 100" transform="rotate(-90 100 100)"/>
       <g id="knob" style="transform-origin:100px 100px"></g>
       <text id="ringTxt" x="100" y="108">0</text>
@@ -198,6 +206,7 @@ function cardEl(c, down, delay = 0) {
   const u = `<svg><use href="#s${c.s}"/></svg>`;
   e.innerHTML = `<i>${rn(c.r)}${u}</i>${u}`;
   e.style.animationDelay = delay + 'ms';
+  c.el = e;
   return e;
 }
 function flip(e) { e.classList.remove('back'); e.style.animation = 'none'; e.animate([{ transform: 'rotateY(90deg)' }, { transform: 'none' }], 260) }
@@ -221,7 +230,7 @@ const BJ = {
     else if (this.phase === 'dealer') actions([['…', () => { }, 0, 1]]);
     else actions([['Repartir', () => this.deal(), 1]]);
   },
-  add(who, down, delay) { const c = this.d.pop(); this[who].push(c); $('bj' + who).append(cardEl(c, down, delay)); return c },
+  add(who, down, delay) { const c = this.d.pop(); this[who].push(c); $('bj' + who).append(cardEl(c, down, delay)); $('bj' + who).classList.toggle('many', this[who].length > 5); return c },
   totals(showD) { $('bjPT').textContent = this.P.length ? this.total(this.P) : ''; $('bjDT').textContent = showD ? this.total(this.D) : this.D.length ? rn(this.D[0].r) === 'A' ? 'A' : this.total([this.D[0]]) : '' },
   deal() {
     const b = bet(); if (!canPay(b)) return;
@@ -271,78 +280,100 @@ const BJ = {
   }
 };
 
-// ---------- póker (5 cartas, un cambio) ----------
+// ---------- Texas Hold'em (mano a mano, apuesta fija) ----------
 const HN = ['Carta alta', 'Par', 'Doble par', 'Trío', 'Escalera', 'Color', 'Full', 'Póker', 'Escalera de color'];
-function evalHand(h) {
+function evalHand(h) {  // up to 5 cards
   const rs = h.map(c => c.r).sort((a, b) => b - a), cnt = {};
   rs.forEach(r => cnt[r] = (cnt[r] || 0) + 1);
   const g = Object.entries(cnt).map(([r, n]) => [n, +r]).sort((a, b) => b[0] - a[0] || b[1] - a[1]);
-  const fl = h.every(c => c.s === h[0].s);
+  const fl = h.length === 5 && h.every(c => c.s === h[0].s);
   let st = 0;
   if (g.length === 5) st = rs[0] - rs[4] === 4 ? rs[0] : rs.join() === '14,5,4,3,2' ? 5 : 0;
-  const cat = st && fl ? 8 : g[0][0] === 4 ? 7 : g[0][0] === 3 && g[1][0] === 2 ? 6 : fl ? 5 : st ? 4 : g[0][0] === 3 ? 3 : g[0][0] === 2 && g[1][0] === 2 ? 2 : g[0][0] === 2 ? 1 : 0;
+  const n2 = g[1]?.[0];
+  const cat = st && fl ? 8 : g[0][0] === 4 ? 7 : g[0][0] === 3 && n2 === 2 ? 6 : fl ? 5 : st ? 4 : g[0][0] === 3 ? 3 : g[0][0] === 2 && n2 === 2 ? 2 : g[0][0] === 2 ? 1 : 0;
   const name = HN[cat] + ([0, 1, 3, 7].includes(cat) ? ' · ' + rn(g[0][1]) : '');
-  return { cat, g, name, score: [cat, ...(st ? [st] : g.map(x => x[1]))] };
+  return { cat, g, name, score: [cat, ...(st ? [st] : g.map(x => x[1]))], cards: h };
 }
 const cmp = (a, b) => { for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return a[i] - b[i]; return 0 };
-function cpuDiscard(h) {
-  const e = evalHand(h);
-  if (e.cat >= 4) return [];
-  if (e.cat >= 1) { const keep = e.g.filter(x => x[0] >= 2).map(x => x[1]); return h.map((c, i) => keep.includes(c.r) ? -1 : i).filter(i => i >= 0) }
-  for (const s of '♠♥♦♣') if (h.filter(c => c.s === s).length === 4) return h.map((c, i) => c.s === s ? -1 : i).filter(i => i >= 0);
-  const top = h.reduce((m, c, i) => c.r > h[m].r ? i : m, 0);
-  return h.map((c, i) => i).filter(i => i !== top);
+function best(cards) {  // best 5 of up to 7
+  if (cards.length <= 5) return evalHand(cards);
+  let b = null;
+  for (let m = 0; m < 1 << cards.length; m++) {
+    const h = cards.filter((_, i) => m >> i & 1);
+    if (h.length !== 5) continue;
+    const e = evalHand(h); if (!b || cmp(e.score, b.score) > 0) b = e;
+  }
+  return b;
+}
+// ponytail: rough 0..1 hand strength for the CPU; swap for Monte Carlo odds if it feels too easy
+function strength(hole, board) {
+  const [a, b] = hole.map(c => c.r).sort((x, y) => y - x);
+  if (!board.length) return a === b ? .55 + a / 40 : (a + b) / 32 + (hole[0].s === hole[1].s ? .05 : 0);
+  const me = best([...hole, ...board]);
+  if (me.cat <= best(board).cat) return .15 + a / 70;  // only playing the board
+  return [.2, .45 + me.g[0][1] / 50, .72, .8, .85, .88, .93, .97, 1][me.cat];
 }
 
+const STREET = ['Preflop', 'Flop', 'Turn', 'River'];
 const PK = {
-  phase: 'bet', d: [], P: [], C: [], x: new Set(), pot: 0, b: 0,
+  phase: 'bet', d: [], P: [], C: [], B: [], pot: 0, inv: 0, b: 0, st: 0,
   ui() {
     lockBet(this.phase !== 'bet'); drawBet();
-    if (this.phase === 'draw') actions([[this.x.size ? `Cambiar ${this.x.size}` : 'Me quedo así', () => this.draw(), 1]]);
-    else if (this.phase === 'final') actions([['Ver cartas', () => this.show(), 0], [`Subir +${this.b}`, () => this.raise(), 1, S.chips < this.b]]);
+    if (this.phase === 'act') actions([['Pasar', () => this.check(), 0], [`Apostar +${this.b}`, () => this.raise(), 1, S.chips < this.b]]);
+    else if (this.phase === 'facing') actions([['Retirarse', () => this.fold(), 0], [`Igualar +${this.b}`, () => this.call(), 1]]);
     else if (this.phase === 'wait') actions([['…', () => { }, 0, 1]]);
     else actions([['Repartir', () => this.deal(), 1]]);
   },
-  pel(i, delay = 0) { const e = cardEl(this.P[i], 0, delay); e.onclick = () => this.toggle(i, e); return e },
-  names(showC) { $('pkPT').textContent = evalHand(this.P).name; $('pkCT').textContent = showC ? evalHand(this.C).name : '' },
-  toggle(i, e) {
-    if (this.phase !== 'draw') return;
-    this.x.has(i) ? this.x.delete(i) : this.x.add(i);
-    e.classList.toggle('x', this.x.has(i)); tick(); this.ui();
+  names(showC) {
+    $('pkPT').textContent = best([...this.P, ...this.B]).name;
+    $('pkCT').textContent = showC ? best([...this.C, ...this.B]).name : '';
   },
+  info(txt, cls = '') { say('pk', txt, cls, `${STREET[this.st]} · bote ${this.pot}`) },
+  put(n) { setChips(S.chips - n); this.pot += n; this.inv += n },
   deal() {
     const b = bet(); if (!canPay(b)) return;
-    setChips(S.chips - b); this.b = b; this.pot = b * 2; this.d = newDeck(); this.x.clear();
-    this.P = this.d.splice(0, 5); this.C = this.d.splice(0, 5);
-    $('pkP').replaceChildren(...this.P.map((c, i) => this.pel(i, i * 60)));
-    $('pkC').replaceChildren(...this.C.map((c, i) => cardEl(c, 1, 300 + i * 60)));
-    this.names(false); this.phase = 'draw';
-    say('pk', 'Toca las cartas a cambiar', '', `bote ${this.pot}`); this.ui();
+    this.b = b; this.pot = b; this.inv = 0; this.put(b); this.st = 0;  // both ante b
+    this.d = newDeck(); this.P = [this.d.pop(), this.d.pop()]; this.C = [this.d.pop(), this.d.pop()]; this.B = [];
+    $('pkP').replaceChildren(...this.P.map((c, i) => cardEl(c, 0, i * 140)));
+    $('pkC').replaceChildren(...this.C.map((c, i) => cardEl(c, 1, 70 + i * 140)));
+    $('pkB').replaceChildren(...[0, 1, 2, 3, 4].map(() => Object.assign(document.createElement('div'), { className: 'slot' })));
+    this.names(false); this.act('Tu turno');
   },
-  draw() {
-    for (const i of this.x) { this.P[i] = this.d.pop(); $('pkP').children[i].replaceWith(this.pel(i)) }
-    const cx = cpuDiscard(this.C); for (const i of cx) { this.C[i] = this.d.pop(); $('pkC').children[i].replaceWith(cardEl(this.C[i], 1, 250)) }
-    this.x.clear(); this.names(false); this.phase = 'final';
-    say('pk', cx.length ? `CPU cambió ${cx.length}` : 'CPU se queda', '', `bote ${this.pot} · ¿subes?`); this.ui();
+  act(txt) { this.phase = 'act'; this.info(txt); this.ui() },
+  cpu(fn) { this.phase = 'wait'; this.ui(); setTimeout(fn, 750) },
+  check() {
+    this.info('Pasas…');
+    this.cpu(() => {
+      const s = strength(this.C, this.B);
+      if (S.chips >= this.b && Math.random() < (s > .7 ? .8 : .12)) {
+        this.pot += this.b; this.phase = 'facing'; this.info(`CPU apuesta ${this.b}`); buzz(1); this.ui();
+      } else this.next('CPU pasa');
+    });
   },
   raise() {
-    setChips(S.chips - this.b); this.pot += this.b; this.phase = 'wait'; this.ui();
-    say('pk', 'CPU piensa…', '', `bote ${this.pot}`);
-    const e = evalHand(this.C), top = Math.max(...this.C.map(c => c.r));
-    const p = e.cat >= 2 ? 1 : e.cat === 1 ? (e.g[0][1] >= 10 ? .9 : .6) : top >= 13 ? .3 : .15;
-    setTimeout(() => {
-      if (Math.random() < p) { this.pot += this.b; this.show('CPU iguala · ') }
-      else { setChips(S.chips + this.pot); say('pk', 'CPU se retira', 'win', `+${this.pot - this.b * 2} fichas`); buzz(2); this.end() }
-    }, 900);
+    this.put(this.b); this.info('Apuestas…');
+    this.cpu(() => {
+      const s = strength(this.C, this.B);
+      if (s > .4 || Math.random() < .25) { this.pot += this.b; this.next('CPU iguala') }
+      else this.win('CPU se retira');
+    });
   },
-  show(pre = '') {
-    [...$('pkC').children].forEach(flip); this.names(true);
-    const r = cmp(evalHand(this.P).score, evalHand(this.C).score), mine = this.b * (this.pot > this.b * 3 ? 2 : 1);
-    const win = r > 0 ? this.pot : r === 0 ? this.pot / 2 : 0;
+  call() { this.put(this.b); this.next('Igualas') },
+  fold() { say('pk', 'Te retiraste', 'lose', `-${this.inv} fichas`); buzz(1); this.end() },
+  win(txt) { setChips(S.chips + this.pot); say('pk', txt, 'win', `+${this.pot - this.inv} fichas`); buzz(2); this.end() },
+  next(txt) {
+    if (++this.st > 3) { this.st = 3; return this.show() }
+    const n = this.st === 1 ? 3 : 1, slots = $('pkB').children;
+    for (let k = 0; k < n; k++) { const c = this.d.pop(), i = this.B.push(c) - 1; slots[i].replaceWith(cardEl(c, 0, k * 120)) }
+    tick(); this.names(false); this.act(txt);
+  },
+  show() {
+    this.C.forEach(c => flip(c.el)); this.names(true);
+    const me = best([...this.P, ...this.B]), op = best([...this.C, ...this.B]), r = cmp(me.score, op.score);
+    const win = r > 0 ? this.pot : r === 0 ? this.pot / 2 : 0, net = win - this.inv;
     setChips(S.chips + win);
-    const net = win - mine;
-    say('pk', r > 0 ? 'Ganaste' : r < 0 ? 'Gana CPU' : 'Empate', r > 0 ? 'win' : r < 0 ? 'lose' : '', pre + (net > 0 ? `+${net}` : net) + ' fichas');
-    const best = r >= 0 ? 'pkP' : 'pkC'; if (r) [...$(best).children].forEach(e => e.classList.add('hl'));
+    say('pk', r > 0 ? 'Ganaste' : r < 0 ? 'Gana CPU' : 'Empate', r > 0 ? 'win' : r < 0 ? 'lose' : '', (net > 0 ? '+' : '') + net + ' fichas');
+    if (r) (r > 0 ? me : op).cards.forEach(c => c.el.classList.add('hl'));
     buzz(r > 0 ? 2 : 1); this.end();
   },
   end() { this.phase = 'bet'; if (S.tab === 'pk') this.ui() }
@@ -365,7 +396,7 @@ function openRefill() {
   $('modal').hidden = false; $('modal').classList.remove('done'); tick();
   spin = { total: 0, last: null, ticks: 0, full: S.chips >= MAX };
   knob.style.transform = ''; $('prog').setAttribute('stroke-dasharray', '0 100');
-  $('ringTxt').textContent = S.chips; $('ringSub').textContent = spin.full ? 'AL MÁXIMO' : 'GIRA ½ VUELTA';
+  $('ringTxt').textContent = S.chips; $('ringSub').textContent = spin.full ? 'AL MÁXIMO' : 'GIRA 1 VUELTA';
 }
 const closeRefill = () => { $('modal').hidden = true; spin = null };
 const ang = e => { const r = $('ring').getBoundingClientRect(); return Math.atan2(e.clientY - r.top - r.height / 2, e.clientX - r.left - r.width / 2) * 180 / Math.PI };
@@ -373,12 +404,12 @@ $('ring').addEventListener('pointerdown', e => { if (!spin || spin.full) return;
 $('ring').addEventListener('pointermove', e => {
   if (!spin || spin.last === null) return;
   const a = ang(e); let d = a - spin.last; d -= Math.round(d / 360) * 360; spin.last = a; spin.total += d;
-  const deg = Math.min(180, Math.abs(spin.total));
+  const deg = Math.min(360, Math.abs(spin.total));
   knob.style.transform = `rotate(${spin.total}deg)`;
   $('prog').setAttribute('stroke-dasharray', `${deg / 3.6} 100`);
-  $('ringTxt').textContent = Math.round(S.chips + (MAX - S.chips) * deg / 180);
+  $('ringTxt').textContent = Math.round(S.chips + (MAX - S.chips) * deg / 360);
   const t = Math.floor(deg / 15); if (t !== spin.ticks) { spin.ticks = t; tick() }
-  if (deg >= 180) {
+  if (deg >= 360) {
     spin.last = null; $('modal').classList.add('done'); $('ringSub').textContent = 'RECARGADO';
     setChips(MAX); buzz(3); setTimeout(closeRefill, 700);
     if ((S.tab === 'bj' ? BJ : PK).phase === 'bet') say(S.tab, 'Recargado', 'win', `${MAX} fichas`);
@@ -388,6 +419,15 @@ $('ring').addEventListener('pointerup', () => { if (spin) spin.last = null });
 $('refill').onclick = () => { $('refill').classList.remove('nudge'); openRefill() };
 $('close').onclick = () => { tick(); closeRefill() };
 $('modal').onclick = e => { if (e.target === $('modal')) closeRefill() };
+
+// ---------- keep portrait when the phone turns ----------
+function orient() {
+  const land = innerWidth > innerHeight;
+  const a = typeof window.orientation === 'number' ? window.orientation : (screen.orientation?.angle === 270 ? -90 : 90);
+  document.body.style.setProperty('--r', a === -90 ? '90deg' : '-90deg');
+  document.body.classList.toggle('rot', land);
+}
+addEventListener('resize', orient); addEventListener('orientationchange', () => setTimeout(orient, 50)); orient();
 
 // ---------- start ----------
 say('bj', 'Elige tu apuesta', '', 'y reparte'); say('pk', 'Elige tu apuesta', '', 'y reparte');
